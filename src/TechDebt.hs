@@ -7,8 +7,9 @@ import System.Exit (ExitCode)
 import System.Process (readProcessWithExitCode)
 
 
+-- git log --pretty=format: --name-only
 gitLog :: IO (ExitCode, String, String)
-gitLog = readProcessWithExitCode "ls" [".", "--almost-all", "-l", "-S"] ""
+gitLog = readProcessWithExitCode "git" ["log", "--pretty=format:", "--name-only"] ""
 
 main :: IO ()
 main = do
