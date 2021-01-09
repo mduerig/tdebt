@@ -1,0 +1,49 @@
+name:                tdebt
+version:             0.1.0.0
+github:              "mduerig/tdebt"
+license:             APLv2
+author:              "Michael Dürig"
+maintainer:          "Michael Dürig"
+copyright:           "Michael Dürig"
+
+extra-source-files:
+- README.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/tdebt#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- directory
+- process
+
+library:
+  source-dirs: src
+
+executables:
+  tdebt-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - tdebt
+
+tests:
+  tdebt-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - tdebt
