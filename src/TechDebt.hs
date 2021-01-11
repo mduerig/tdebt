@@ -76,7 +76,7 @@ parseLoc path line =
 locComplexities :: String -> String -> Map String Int
 locComplexities path locOut =
   let
-    valued = (parseLoc path) <$> lines locOut
+    valued = parseLoc path <$> lines locOut
   in
     fromListWith (+) valued
 
@@ -126,11 +126,6 @@ locHotspots path = do
       putStrLn "Error while running git: "
       putStrLn gitErr
     else do
-      (locExitCode, locOut, locErr) <- loc path
-      if locExitCode /= ExitSuccess
-        then do
-          putStrLn "Error while running wc -l:"
-          putStrLn locErr
-        else do
-          mapM_ print
-          $ techDebt (frequencies gitOut) (locComplexities path locOut)
+      (_, locOut, _) <- loc path
+      mapM_ print
+        $ techDebt (frequencies gitOut) (locComplexities path locOut)
