@@ -5,28 +5,28 @@ The `tdebt` utility helps finding hotspots of technical debt in projects. To do 
     debt(file) = (complexity(file) / max(complexity(all files in project)))
              * (churn(file) / max(churn(all files in project)))
 
-See [Code as a Crime Scene](https://www.adamtornhill.com/articles/crimescene/codeascrimescene.htm) for more background. 
+See [Code as a Crime Scene](https://www.adamtornhill.com/articles/crimescene/codeascrimescene.htm) for more background.
 
 *Note*: above normalization makes the debt metric a relative number for comparing files within a project. Values of files from different projects are not comparable. For the same reason the debt metric can neither be used for tracking debt over time.
 
-Complexity is measured either simply in number of lines of code or more sophistically using cyclomatic complexity. 
+Complexity is measured either simply in number of lines of code or more sophistically using cyclomatic complexity.
 
-Churn is measured by number of version controls revisions. 
-### Dependencies 
+Churn is measured by number of version controls revisions.
+### Dependencies
 * `git` for calculating churn
   * tested versions: 2.17.1 / 2.20.1
 * `bash` and `wc` for counting lines of codes.
 * [`PMD`](https://pmd.github.io/) for calculating cyclomatic complexities
   * tested version 6.30.0
-  * make sure a symlink `pmd` to `pmd-bin-6.30.0/bin/run.sh` is on the `$PATH`. E.g. `ln -s /opt/pmd-bin-6.30.0/bin/run.sh /usr/local/bin/pmd`. 
+  * make sure a symlink `pmd` to `pmd-bin-6.30.0/bin/run.sh` is on the `$PATH`. E.g. `ln -s /opt/pmd-bin-6.30.0/bin/run.sh /usr/local/bin/pmd`.
 
-### Usage 
-`tdebt [pmd|loc] [-h] <path to git repo>` 
+### Usage
+`tdebt [pmd|loc] [-h] <path to git repo>`
 
 Where `pmd` chooses PMD to calculate the complexity and `loc` choose `wc -l` to calculate the complexity.
 
-#### Example 
-Running the command 
+#### Example
+Running the command
 
     $ tdebt pmd ~/Checkouts/jackrabbit-oak
 
@@ -42,3 +42,10 @@ results in the following output (last 10 lines only):
     ("oak-lucene/src/test/java/org/apache/jackrabbit/oak/plugins/index/lucene/LucenePropertyIndexTest.java",Metric {churn = 125, complexity = 215, debt = 7.446042168841603e-2})
     ("oak-jcr/src/test/java/org/apache/jackrabbit/oak/jcr/RepositoryTest.java",Metric {churn = 168, complexity = 164, debt = 7.633613165987864e-2})
     ("oak-lucene/src/main/java/org/apache/jackrabbit/oak/plugins/index/lucene/LucenePropertyIndex.java",Metric {churn = 138, complexity = 286, debt = 0.10935084365389411})
+
+
+### Building `tdebt`
+
+`tdebt` uses [The Haskell Tool Stack](https://docs.haskellstack.org/en/stable/README/#how-to-install) for building
+
+    stack build
