@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2b2c71bcbd6ac40319b4d480f112f0e539ea1e8255cfecff8043d69690a6e31a
+-- hash: 9a3d34afb0d67b15bbeaa9dc66ecc9113bb345a6144da42abacbf1183a9f5dea
 
 name:           tdebt
 version:        0.1.0.0
@@ -15,6 +15,7 @@ author:         Michael Dürig
 maintainer:     Michael Dürig
 copyright:      Michael Dürig
 license:        APLv2
+license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
