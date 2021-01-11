@@ -15,5 +15,5 @@ parse ["loc", path] = TechDebt.locHotspots path
 parse _ = help >> exitSuccess
 
 help :: IO ()
-help = putStrLn "Usage: [pmd|loc] [-h] [path to git repo]"
+help = putStrLn "Usage: [pmd|loc] [-h] <path to git repo>"
 

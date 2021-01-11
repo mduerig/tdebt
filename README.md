@@ -21,7 +21,7 @@ Churn is measured by number of version controls revisions.
   * make sure a symlink `pmd` to `pmd-bin-6.30.0/bin/run.sh` is on the `$PATH`. E.g. `ln -s /opt/pmd-bin-6.30.0/bin/run.sh /usr/local/bin/pmd`. 
 
 ### Usage 
-`tdebt [pmd|loc] [-h] [path to git repo]` 
+`tdebt [pmd|loc] [-h] <path to git repo>` 
 
 Where `pmd` chooses PMD to calculate the complexity and `loc` choose `wc -l` to calculate the complexity.
 
