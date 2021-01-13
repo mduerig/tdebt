@@ -1,7 +1,7 @@
 name:                tdebt
 version:             0.1.0.0
 github:              "mduerig/tdebt"
-license:             APLv2
+license:             Apache-2.0
 author:              "Michael Dürig"
 maintainer:          "Michael Dürig"
 copyright:           "Michael Dürig"
