@@ -3,3 +3,4 @@
 stack.yaml.lock
 .vscode/
 dist-newstyle/
+hie.yaml
