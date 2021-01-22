@@ -1,15 +1,12 @@
 module TechDebt where
 
-import System.Exit (ExitCode(..))
-import System.Process (readProcessWithExitCode)
+import System.Exit ( ExitCode(..) )
+import System.Process ( readProcessWithExitCode )
 import Data.Map.Strict (fromListWith, toList, Map, unionWith, elems)
-import qualified Data.Map.Strict
-import Data.List (sortBy, isInfixOf)
-import Data.Function (on)
-import Data.List.Extra (split)
-import Data.Bifunctor (bimap)
-import Data.Tuple.Extra (thd3)
-import Text.Regex.Posix
+import Data.Function ( on )
+import Data.List.Extra ( sortBy, split )
+import Data.Bifunctor ( Bifunctor(bimap) )
+import Text.Regex.Posix ( (=~) )
 
 ensureSlash :: String -> String
 ensureSlash [] = "/"

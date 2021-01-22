@@ -1,11 +1,21 @@
 module Main where
 
-import System.Environment
-import System.Exit
 import qualified TechDebt
 import Options.Applicative
+    ( Alternative((<|>)),
+      optional,
+      flag,
+      help,
+      info,
+      long,
+      metavar,
+      short,
+      strArgument,
+      strOption,
+      execParser,
+      helper,
+      Parser )
 import Data.Monoid ((<>))
-import Data.Maybe (fromJust, isJust)
 
 data Opts = Opts
   { path :: String
