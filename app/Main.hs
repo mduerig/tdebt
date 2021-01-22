@@ -5,14 +5,16 @@ import System.Exit
 import qualified TechDebt
 
 main :: IO ()
-main = getArgs >>= parse
+main = do
+  args <- getArgs 
+  runWithArgs args
 
-parse :: [[Char]] -> IO ()
-parse ["-h"] = help >> exitSuccess
-parse [path] = TechDebt.pmdHotspots path
-parse ["pmd", path] = TechDebt.pmdHotspots path
-parse ["loc", path] = TechDebt.locHotspots path
-parse _ = help >> exitSuccess
+runWithArgs :: [String] -> IO ()
+runWithArgs ["-h"] = help >> exitSuccess
+runWithArgs [path] = TechDebt.pmdHotspots path
+runWithArgs ["pmd", path] = TechDebt.pmdHotspots path
+runWithArgs ["loc", path] = TechDebt.locHotspots path
+runWithArgs _ = help >> exitSuccess
 
 help :: IO ()
 help = putStrLn "Usage: [pmd|loc] [-h] <path to git repo>"
