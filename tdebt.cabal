@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7c10db5223d1acf47d407c28ecb9c2fa0801a0a3e1a1c44dbecf2fa2990e6600
+-- hash: f6235489fedf6fe5fe2ad5e0ff336aeea7b9296fef152a77090253ed7fb9122c
 
 name:           tdebt
 version:        0.1.0.0
@@ -36,6 +36,7 @@ library
     , containers
     , directory
     , extra
+    , optparse-applicative
     , process
     , regex-posix
   default-language: Haskell2010
@@ -52,6 +53,7 @@ executable tdebt-exe
     , containers
     , directory
     , extra
+    , optparse-applicative
     , process
     , regex-posix
     , tdebt
@@ -70,6 +72,7 @@ test-suite tdebt-test
     , containers
     , directory
     , extra
+    , optparse-applicative
     , process
     , regex-posix
     , tdebt

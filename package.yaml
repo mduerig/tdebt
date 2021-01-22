@@ -25,6 +25,7 @@ dependencies:
 - containers
 - extra
 - regex-posix
+- optparse-applicative
 
 library:
   source-dirs: src

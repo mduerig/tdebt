@@ -15,9 +15,18 @@ ensureSlash :: String -> String
 ensureSlash [] = "/"
 ensureSlash s = if last s == '/' then s else s ++ "/"
 
-gitLog :: String -> IO (ExitCode, String, String)
-gitLog path = readProcessWithExitCode "git"
-  ["--git-dir", ensureSlash path ++ ".git", "log", "--pretty=format:", "--name-only"] ""
+maybeAppend :: [a] -> Maybe a -> [a]
+maybeAppend xs Nothing = xs
+maybeAppend xs (Just x) = xs ++ [x]
+
+gitLog :: String -> Maybe String -> Maybe String -> IO (ExitCode, String, String)
+gitLog path before after =
+  let
+    beforeDate = fmap ("--before=" ++) before
+    afterDate = fmap ("--after=" ++) after
+    args = ["--git-dir", ensureSlash path ++ ".git", "log", "--pretty=format:", "--name-only"]
+  in
+    readProcessWithExitCode "git" (maybeAppend (maybeAppend args beforeDate) afterDate) ""
 
 pmd :: String -> IO(ExitCode, String, String)
 pmd path = readProcessWithExitCode "pmd"
@@ -101,9 +110,9 @@ techDebt churn complexity =
       ( (\x -> Metric x 0 0.0) <$> churn )
       ( (\x -> Metric 0 x 0.0) <$> complexity )
 
-pmdHotspots :: String -> IO ()
-pmdHotspots path = do
-  (gitExitCode, gitOut, gitErr) <- gitLog path
+pmdHotspots :: String -> Maybe String -> Maybe String -> IO ()
+pmdHotspots path before after = do
+  (gitExitCode, gitOut, gitErr) <- gitLog path before after
   if gitExitCode /= ExitSuccess
     then do
       putStrLn "Error while running git: "
@@ -118,9 +127,9 @@ pmdHotspots path = do
           mapM_ print
           $ techDebt (frequencies gitOut) (pmdComplexities path pmdOut)
 
-locHotspots :: String -> IO ()
-locHotspots path = do
-  (gitExitCode, gitOut, gitErr) <- gitLog path
+locHotspots :: String -> Maybe String -> Maybe String -> IO ()
+locHotspots path before after = do
+  (gitExitCode, gitOut, gitErr) <- gitLog path before after
   if gitExitCode /= ExitSuccess
     then do
       putStrLn "Error while running git: "

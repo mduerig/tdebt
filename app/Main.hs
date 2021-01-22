@@ -3,19 +3,47 @@ module Main where
 import System.Environment
 import System.Exit
 import qualified TechDebt
+import Options.Applicative
+import Data.Monoid ((<>))
+import Data.Maybe (fromJust, isJust)
+
+data Opts = Opts
+  { path :: String
+  , complexity :: Complexity
+  , before :: Maybe String
+  , after :: Maybe String
+  } deriving Show
+
+data Complexity = PMD | LOC
+  deriving Show
 
 main :: IO ()
 main = do
-  args <- getArgs 
-  runWithArgs args
+  opts <- execParser args
+  runWithOpts opts
+  where
+    args = info (helper <*> argsParser) mempty
 
-runWithArgs :: [String] -> IO ()
-runWithArgs ["-h"] = help >> exitSuccess
-runWithArgs [path] = TechDebt.pmdHotspots path
-runWithArgs ["pmd", path] = TechDebt.pmdHotspots path
-runWithArgs ["loc", path] = TechDebt.locHotspots path
-runWithArgs _ = help >> exitSuccess
+runWithOpts :: Opts -> IO ()
+runWithOpts (Opts path PMD before after) = TechDebt.pmdHotspots path before after
+runWithOpts (Opts path LOC before after) = TechDebt.locHotspots path before after
 
-help :: IO ()
-help = putStrLn "Usage: [pmd|loc] [-h] <path to git repo>"
-
+argsParser :: Parser Opts
+argsParser = Opts
+     <$> strArgument
+          ( metavar "<path to git repository>"
+         <> help "Path to the .git folder of a Git repository" )
+     <*>  ( flag PMD PMD (long "pmd"
+         <> help "use pmd complexity metric")
+        <|> flag PMD LOC (long "loc"
+         <> help "use loc complexity metric"))
+     <*> optional ( strOption
+          ( metavar "<date>"
+         <> long "before"
+         <> short 'b'
+         <> help "Only include commits before the specified date" ))
+     <*> optional ( strOption
+          ( metavar "<date>"
+         <> long "after"
+         <> short 'a'
+         <> help "Only include commits after the specified date" ))
