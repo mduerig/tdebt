@@ -12,18 +12,18 @@ ensureSlash :: String -> String
 ensureSlash [] = "/"
 ensureSlash s = if last s == '/' then s else s ++ "/"
 
-maybeAppend :: [a] -> Maybe a -> [a]
-maybeAppend xs Nothing = xs
-maybeAppend xs (Just x) = xs ++ [x]
+(++?) :: [a] -> Maybe a -> [a]
+(++?) xs Nothing = xs
+(++?) xs (Just x) = xs ++ [x]
 
 gitLog :: String -> Maybe String -> Maybe String -> Maybe String -> IO (ExitCode, String, String)
 gitLog gitDir before after path =
   let
     beforeDate = fmap ("--before=" ++) before
     afterDate = fmap ("--after=" ++) after
-    args = ["--git-dir", ensureSlash gitDir ++ ".git", "log", "--pretty=format:", "--name-only", "--"]
+    args = ["--git-dir", ensureSlash gitDir ++ ".git", "log", "--pretty=format:", "--name-only"]
   in
-    readProcessWithExitCode "git" (maybeAppend (maybeAppend (maybeAppend args beforeDate) afterDate) path) ""
+    readProcessWithExitCode "git" (args ++? beforeDate ++? afterDate ++ ["--"] ++? path) ""
 
 pmd :: String -> IO(ExitCode, String, String)
 pmd gitDir = readProcessWithExitCode "pmd"
