@@ -16,22 +16,22 @@ maybeAppend :: [a] -> Maybe a -> [a]
 maybeAppend xs Nothing = xs
 maybeAppend xs (Just x) = xs ++ [x]
 
-gitLog :: String -> Maybe String -> Maybe String -> IO (ExitCode, String, String)
-gitLog path before after =
+gitLog :: String -> Maybe String -> Maybe String -> Maybe String -> IO (ExitCode, String, String)
+gitLog gitDir before after path =
   let
     beforeDate = fmap ("--before=" ++) before
     afterDate = fmap ("--after=" ++) after
-    args = ["--git-dir", ensureSlash path ++ ".git", "log", "--pretty=format:", "--name-only"]
+    args = ["--git-dir", ensureSlash gitDir ++ ".git", "log", "--pretty=format:", "--name-only", "--"]
   in
-    readProcessWithExitCode "git" (maybeAppend (maybeAppend args beforeDate) afterDate) ""
+    readProcessWithExitCode "git" (maybeAppend (maybeAppend (maybeAppend args beforeDate) afterDate) path) ""
 
 pmd :: String -> IO(ExitCode, String, String)
-pmd path = readProcessWithExitCode "pmd"
-  ["pmd", "-d", path, "-R", "rule.xml"] ""
+pmd gitDir = readProcessWithExitCode "pmd"
+  ["pmd", "-d", gitDir, "-R", "rule.xml"] ""
 
 loc :: String -> IO(ExitCode, String, String)
-loc path = readProcessWithExitCode "bash"
-  ["-c", "git --git-dir " ++ ensureSlash path ++ ".git  ls-files | xargs printf -- " ++ ensureSlash path ++ "'%s\n' | xargs wc -l"] ""
+loc gitDir = readProcessWithExitCode "bash"
+  ["-c", "git --git-dir " ++ ensureSlash gitDir ++ ".git  ls-files | xargs printf -- " ++ ensureSlash gitDir ++ "'%s\n' | xargs wc -l"] ""
 
 frequencies :: String -> Map String Int
 frequencies =
@@ -42,13 +42,13 @@ frequencies =
     occurrences . nonEmpty . lines
 
 parseFileName :: String -> String -> String
-parseFileName path s =
+parseFileName gitDir s =
   let
     fileName :: (String, String, String, [String]) -> String
     fileName (_, _, _, name:nil) = name
     fileName _ = "Could not parse file name from:" ++ s
   in
-    fileName (s =~ (ensureSlash path ++ "([^:]*):.*"))
+    fileName (s =~ (ensureSlash gitDir ++ "([^:]*):.*"))
 
 parsePmdComplexity :: String -> Int
 parsePmdComplexity s =
@@ -60,29 +60,29 @@ parsePmdComplexity s =
     complexity (s =~ ".*total cyclomatic complexity of ([0-9]+).*")
 
 pmdComplexities :: String -> String -> Map String Int
-pmdComplexities path pmdOut =
+pmdComplexities gitDir pmdOut =
   let
     splitOnTabs = split ('\t' ==)
     firstAndThird xs = (head xs, xs !! 2)
     tuples = firstAndThird . splitOnTabs <$> lines pmdOut
-    parsed = bimap (parseFileName path) parsePmdComplexity
+    parsed = bimap (parseFileName gitDir) parsePmdComplexity
            . firstAndThird . splitOnTabs <$> lines pmdOut
   in
     fromListWith (+) parsed
 
 parseLoc :: String -> String -> (String, Int)
-parseLoc path line =
+parseLoc gitDir line =
   let
     parse :: (String, String, String, [String]) -> (String, Int)
     parse (_, _, _, [complexity, fileName]) = (fileName, read complexity)
     parse _ = ("Could not parse output from wc -l:" ++ line, 0)
   in
-    parse (line =~ ("[^0-9]*([0-9]+)[^/]*" ++ ensureSlash path ++ "(.*).*"))
+    parse (line =~ ("[^0-9]*([0-9]+)[^/]*" ++ ensureSlash gitDir ++ "(.*).*"))
 
 locComplexities :: String -> String -> Map String Int
-locComplexities path locOut =
+locComplexities gitDir locOut =
   let
-    valued = parseLoc path <$> lines locOut
+    valued = parseLoc gitDir <$> lines locOut
   in
     fromListWith (+) valued
 
@@ -109,31 +109,31 @@ techDebt churn complexity =
       ( (\x -> Metric x 0 0.0) <$> churn )
       ( (\x -> Metric 0 x 0.0) <$> complexity )
 
-pmdHotspots :: String -> Maybe String -> Maybe String -> IO ()
-pmdHotspots path before after = do
-  (gitExitCode, gitOut, gitErr) <- gitLog path before after
+pmdHotspots :: String -> Maybe String -> Maybe String -> Maybe String -> IO ()
+pmdHotspots gitDir before after path = do
+  (gitExitCode, gitOut, gitErr) <- gitLog gitDir before after path
   if gitExitCode /= ExitSuccess
     then do
       putStrLn "Error while running git: "
       putStrLn gitErr
     else do
-      (pmdExitCode, pmdOut, pmdErr) <- pmd path
+      (pmdExitCode, pmdOut, pmdErr) <- pmd gitDir
       if pmdExitCode `notElem` [ExitSuccess, ExitFailure 4]
         then do
           putStrLn "Error while running PMD:"
           putStrLn pmdErr
         else do
           mapM_ print
-          $ techDebt (frequencies gitOut) (pmdComplexities path pmdOut)
+          $ techDebt (frequencies gitOut) (pmdComplexities gitDir pmdOut)
 
-locHotspots :: String -> Maybe String -> Maybe String -> IO ()
-locHotspots path before after = do
-  (gitExitCode, gitOut, gitErr) <- gitLog path before after
+locHotspots :: String -> Maybe String -> Maybe String -> Maybe String ->  IO ()
+locHotspots gitDir before after path = do
+  (gitExitCode, gitOut, gitErr) <- gitLog gitDir before after path
   if gitExitCode /= ExitSuccess
     then do
       putStrLn "Error while running git: "
       putStrLn gitErr
     else do
-      (_, locOut, _) <- loc path
+      (_, locOut, _) <- loc gitDir
       mapM_ print
-        $ techDebt (frequencies gitOut) (locComplexities path locOut)
+        $ techDebt (frequencies gitOut) (locComplexities gitDir locOut)

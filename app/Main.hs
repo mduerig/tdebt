@@ -18,10 +18,11 @@ import Options.Applicative
 import Data.Monoid ((<>))
 
 data Opts = Opts
-  { path :: String
+  { gitDir :: String
   , complexity :: Complexity
   , before :: Maybe String
   , after :: Maybe String
+  , path :: Maybe String
   } deriving Show
 
 data Complexity = PMD | LOC
@@ -35,8 +36,8 @@ main = do
     args = info (helper <*> argsParser) mempty
 
 runWithOpts :: Opts -> IO ()
-runWithOpts (Opts path PMD before after) = TechDebt.pmdHotspots path before after
-runWithOpts (Opts path LOC before after) = TechDebt.locHotspots path before after
+runWithOpts (Opts gitDir PMD before after path) = TechDebt.pmdHotspots gitDir before after path
+runWithOpts (Opts gitDir LOC before after path) = TechDebt.locHotspots gitDir before after path
 
 argsParser :: Parser Opts
 argsParser = Opts
@@ -57,3 +58,8 @@ argsParser = Opts
          <> long "after"
          <> short 'a'
          <> help "Only include commits after the specified date" ))
+     <*> optional ( strOption
+          ( metavar "<path>"
+         <> long "path"
+         <> short 'p'
+         <> help "Only include files from the given path within the Git repository" ))
