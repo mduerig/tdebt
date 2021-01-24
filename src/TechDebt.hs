@@ -100,8 +100,10 @@ techDebt churn complexity =
     maxComplexity = fromIntegral $ maximum $ elems complexity
     mul (Metric churn _ _) (Metric _ complexity _)
       = Metric churn complexity ((fromIntegral churn / maxChurn) * (fromIntegral complexity / maxComplexity))
+    nonZeroDebt (_, Metric _ _ debt) = debt /= 0
   in
     sortBy (compare `on` debt . snd)
+    $ filter nonZeroDebt
     $ toList
     $ unionWith mul
       ( (\x -> Metric x 0 0.0) <$> churn )
