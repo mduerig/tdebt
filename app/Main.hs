@@ -4,6 +4,7 @@ import qualified TechDebt
 import Options.Applicative
     ( Alternative((<|>)),
       optional,
+      value,
       flag,
       help,
       info,
@@ -16,6 +17,7 @@ import Options.Applicative
       helper,
       Parser )
 import Data.Monoid ((<>))
+import System.Directory (getCurrentDirectory)
 
 data Opts = Opts
   { path ::  Maybe String
@@ -30,17 +32,18 @@ data Complexity = PMD | LOC
 
 main :: IO ()
 main = do
-  opts <- execParser args
+  cd <- getCurrentDirectory
+  opts <- execParser (parserWithDefaultDir cd)
   runWithOpts opts
   where
-    args = info (helper <*> argsParser) mempty
+    parserWithDefaultDir cd = info (helper <*> argsParser cd) mempty
 
 runWithOpts :: Opts -> IO ()
 runWithOpts (Opts path PMD before after gitDir) = TechDebt.pmdHotspots gitDir before after path
 runWithOpts (Opts path LOC before after gitDir) = TechDebt.locHotspots gitDir before after path
 
-argsParser :: Parser Opts
-argsParser = Opts
+argsParser :: String -> Parser Opts
+argsParser dir = Opts
      <$>  optional (strArgument
           ( metavar "<path>"
          <> help "path within the Git repository"))
@@ -62,4 +65,5 @@ argsParser = Opts
           ( metavar "<path>"
          <> long "git-dir"
          <> short 'g'
+         <> value dir
          <> help "path to the Git repository")
