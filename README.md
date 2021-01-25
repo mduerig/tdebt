@@ -22,7 +22,7 @@ Churn is measured by number of version controls revisions.
 
 ### Usage
         Usage: tdebt-exe [<path>] [--pmd | --loc] [-b|--before <date>]
-                        [-a|--after <date>] (-g|--git-dir <path>)
+                        [-a|--after <date>] [-r|--rule <path>] [-g|--git-dir <path>]
 
         Available options:
           -h,--help                Show this help text
@@ -31,8 +31,8 @@ Churn is measured by number of version controls revisions.
           --loc                    use loc complexity metric
           -b,--before <date>       only include commits before the specified date
           -a,--after <date>        only include commits after the specified date
+          -r,--rule <path>         custom PMD rule.xml
           -g,--git-dir <path>      path to the Git repository
-
 #### Example
 Running the command
 
@@ -57,3 +57,4 @@ results in the following output (last 10 lines only):
 `tdebt` uses [The Haskell Tool Stack](https://docs.haskellstack.org/en/stable/README/#how-to-install) for building
 
     stack build
+    stack install

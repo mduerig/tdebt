@@ -18,12 +18,14 @@ import Options.Applicative
       Parser )
 import Data.Monoid ((<>))
 import System.Directory (getCurrentDirectory)
+import Paths_tdebt(getDataFileName)
 
 data Opts = Opts
   { path ::  Maybe String
   , complexity :: Complexity
   , before :: Maybe String
   , after :: Maybe String
+  , pmdRules :: String
   , gitDir :: String
   } deriving Show
 
@@ -33,17 +35,18 @@ data Complexity = PMD | LOC
 main :: IO ()
 main = do
   cd <- getCurrentDirectory
-  opts <- execParser (parserWithDefaultDir cd)
+  pmdRules <- getDataFileName "rule.xml"
+  opts <- execParser (parserWithDefaultDir cd pmdRules)
   runWithOpts opts
   where
-    parserWithDefaultDir cd = info (helper <*> argsParser cd) mempty
+    parserWithDefaultDir cd ruleFile = info (helper <*> argsParser cd ruleFile) mempty
 
 runWithOpts :: Opts -> IO ()
-runWithOpts (Opts path PMD before after gitDir) = TechDebt.pmdHotspots gitDir before after path
-runWithOpts (Opts path LOC before after gitDir) = TechDebt.locHotspots gitDir before after path
+runWithOpts (Opts path PMD before after pmdRules gitDir) = TechDebt.pmdHotspots gitDir pmdRules before after path
+runWithOpts (Opts path LOC before after _ gitDir) = TechDebt.locHotspots gitDir before after path
 
-argsParser :: String -> Parser Opts
-argsParser dir = Opts
+argsParser :: String -> String -> Parser Opts
+argsParser dir pmdRules = Opts
      <$>  optional (strArgument
           ( metavar "<path>"
          <> help "path within the Git repository"))
@@ -61,9 +64,16 @@ argsParser dir = Opts
          <> long "after"
          <> short 'a'
          <> help "only include commits after the specified date" ))
+     <*> strOption 
+          ( metavar "<path>"
+         <> long "rule"
+         <> short 'r'
+         <> value pmdRules
+         <> help "custom PMD rule.xml")
      <*> strOption
           ( metavar "<path>"
          <> long "git-dir"
          <> short 'g'
          <> value dir
          <> help "path to the Git repository")
+      

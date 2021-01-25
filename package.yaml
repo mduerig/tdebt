@@ -30,6 +30,9 @@ dependencies:
 library:
   source-dirs: src
 
+data-files:
+  - rule.xml
+
 executables:
   tdebt-exe:
     main:                Main.hs

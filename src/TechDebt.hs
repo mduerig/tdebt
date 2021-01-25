@@ -25,9 +25,9 @@ gitLog gitDir before after path =
   in
     readProcessWithExitCode "git" (args ++? beforeDate ++? afterDate ++ ["--"] ++? path) ""
 
-pmd :: String -> IO(ExitCode, String, String)
-pmd gitDir = readProcessWithExitCode "pmd"
-  ["pmd", "-d", gitDir, "-R", "rule.xml"] ""
+pmd :: String -> String -> IO(ExitCode, String, String)
+pmd gitDir pmdRules = readProcessWithExitCode "pmd"
+  ["pmd", "-d", gitDir, "-R", pmdRules] ""
 
 loc :: String -> IO(ExitCode, String, String)
 loc gitDir = readProcessWithExitCode "bash"
@@ -109,15 +109,15 @@ techDebt churn complexity =
       ( (\x -> Metric x 0 0.0) <$> churn )
       ( (\x -> Metric 0 x 0.0) <$> complexity )
 
-pmdHotspots :: String -> Maybe String -> Maybe String -> Maybe String -> IO ()
-pmdHotspots gitDir before after path = do
+pmdHotspots :: String -> String -> Maybe String -> Maybe String -> Maybe String -> IO ()
+pmdHotspots gitDir pmdRules before after path = do
   (gitExitCode, gitOut, gitErr) <- gitLog gitDir before after path
   if gitExitCode /= ExitSuccess
     then do
       putStrLn "Error while running git: "
       putStrLn gitErr
     else do
-      (pmdExitCode, pmdOut, pmdErr) <- pmd gitDir
+      (pmdExitCode, pmdOut, pmdErr) <- pmd gitDir pmdRules
       if pmdExitCode `notElem` [ExitSuccess, ExitFailure 4]
         then do
           putStrLn "Error while running PMD:"

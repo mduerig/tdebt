@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f6235489fedf6fe5fe2ad5e0ff336aeea7b9296fef152a77090253ed7fb9122c
+-- hash: 454438632eeffda4994fa840fa922f470f0342a17ec8091e02948a6c8f6fc70f
 
 name:           tdebt
 version:        0.1.0.0
@@ -19,6 +19,8 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
+data-files:
+    rule.xml
 
 source-repository head
   type: git
