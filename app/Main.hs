@@ -18,11 +18,11 @@ import Options.Applicative
 import Data.Monoid ((<>))
 
 data Opts = Opts
-  { gitDir :: String
+  { path ::  Maybe String
   , complexity :: Complexity
   , before :: Maybe String
   , after :: Maybe String
-  , path :: Maybe String
+  , gitDir :: String
   } deriving Show
 
 data Complexity = PMD | LOC
@@ -36,14 +36,14 @@ main = do
     args = info (helper <*> argsParser) mempty
 
 runWithOpts :: Opts -> IO ()
-runWithOpts (Opts gitDir PMD before after path) = TechDebt.pmdHotspots gitDir before after path
-runWithOpts (Opts gitDir LOC before after path) = TechDebt.locHotspots gitDir before after path
+runWithOpts (Opts path PMD before after gitDir) = TechDebt.pmdHotspots gitDir before after path
+runWithOpts (Opts path LOC before after gitDir) = TechDebt.locHotspots gitDir before after path
 
 argsParser :: Parser Opts
 argsParser = Opts
-     <$> strArgument
-          ( metavar "<path to git repository>"
-         <> help "Path to the .git folder of a Git repository" )
+     <$>  optional (strArgument
+          ( metavar "<path>"
+         <> help "path within the Git repository"))
      <*>  ( flag PMD PMD (long "pmd"
          <> help "use pmd complexity metric")
         <|> flag PMD LOC (long "loc"
@@ -52,14 +52,14 @@ argsParser = Opts
           ( metavar "<date>"
          <> long "before"
          <> short 'b'
-         <> help "Only include commits before the specified date" ))
+         <> help "only include commits before the specified date" ))
      <*> optional ( strOption
           ( metavar "<date>"
          <> long "after"
          <> short 'a'
-         <> help "Only include commits after the specified date" ))
-     <*> optional ( strOption
+         <> help "only include commits after the specified date" ))
+     <*> strOption
           ( metavar "<path>"
-         <> long "path"
-         <> short 'p'
-         <> help "Only include files from the given path within the Git repository" ))
+         <> long "git-dir"
+         <> short 'g'
+         <> help "path to the Git repository")

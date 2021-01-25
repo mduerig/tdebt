@@ -21,18 +21,17 @@ Churn is measured by number of version controls revisions.
   * make sure a symlink `pmd` to `pmd-bin-6.30.0/bin/run.sh` is on the `$PATH`. E.g. `ln -s /opt/pmd-bin-6.30.0/bin/run.sh /usr/local/bin/pmd`.
 
 ### Usage
-        Usage: tdebt-exe <path to git repository> [--pmd | --loc] [-b|--before <date>]
-                 [-a|--after <date>] [-p|--path <path>]
+        Usage: tdebt-exe [<path>] [--pmd | --loc] [-b|--before <date>]
+                        [-a|--after <date>] (-g|--git-dir <path>)
 
         Available options:
           -h,--help                Show this help text
-          <path to git repository> Path to the .git folder of a Git repository
+          <path>                   path within the Git repository
           --pmd                    use pmd complexity metric
           --loc                    use loc complexity metric
-          -b,--before <date>       Only include commits before the specified date
-          -a,--after <date>        Only include commits after the specified date
-          -p,--path <path>         Only include files from the given path within the Git
-                                   repository
+          -b,--before <date>       only include commits before the specified date
+          -a,--after <date>        only include commits after the specified date
+          -g,--git-dir <path>      path to the Git repository
 
 #### Example
 Running the command
