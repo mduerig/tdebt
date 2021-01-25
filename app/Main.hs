@@ -15,6 +15,7 @@ import Options.Applicative
       strOption,
       execParser,
       helper,
+      internal,
       Parser )
 import Data.Monoid ((<>))
 import System.Directory (getCurrentDirectory)
@@ -64,11 +65,12 @@ argsParser dir pmdRules = Opts
          <> long "after"
          <> short 'a'
          <> help "only include commits after the specified date" ))
-     <*> strOption 
+     <*> strOption
           ( metavar "<path>"
          <> long "rule"
          <> short 'r'
          <> value pmdRules
+         <> internal
          <> help "custom PMD rule.xml")
      <*> strOption
           ( metavar "<path>"
@@ -76,4 +78,3 @@ argsParser dir pmdRules = Opts
          <> short 'g'
          <> value dir
          <> help "path to the Git repository")
-      
