@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 454438632eeffda4994fa840fa922f470f0342a17ec8091e02948a6c8f6fc70f
+-- hash: b70bc86eed6704ee448415e772cac79ca3c7da64ce9735278654bd6cf397950d
 
 name:           tdebt
 version:        0.1.0.0
@@ -43,7 +43,7 @@ library
     , regex-posix
   default-language: Haskell2010
 
-executable tdebt-exe
+executable tdebt
   main-is: Main.hs
   other-modules:
       Paths_tdebt

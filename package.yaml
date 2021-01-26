@@ -34,7 +34,7 @@ data-files:
   - rule.xml
 
 executables:
-  tdebt-exe:
+  tdebt:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
