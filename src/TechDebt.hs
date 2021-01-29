@@ -87,8 +87,8 @@ locComplexities gitDir locOut =
     fromListWith (+) valued
 
 data Metric = Metric
-  { churn :: Int
-  , complexity :: Int
+  { churn :: Double
+  , complexity :: Double
   , debt :: Double
   }
   deriving Show
@@ -98,16 +98,15 @@ techDebt churn complexity =
   let
     maxChurn      = fromIntegral $ maximum $ elems churn
     maxComplexity = fromIntegral $ maximum $ elems complexity
-    mul (Metric churn _ _) (Metric _ complexity _)
-      = Metric churn complexity ((fromIntegral churn / maxChurn) * (fromIntegral complexity / maxComplexity))
+    mul (Metric churn _ _) (Metric _ complexity _) = Metric churn complexity (churn * complexity)
     nonZeroDebt (_, Metric _ _ debt) = debt /= 0
   in
     sortBy (compare `on` debt . snd)
     $ filter nonZeroDebt
     $ toList
     $ unionWith mul
-      ( (\x -> Metric x 0 0.0) <$> churn )
-      ( (\x -> Metric 0 x 0.0) <$> complexity )
+      ( (\x -> Metric (fromIntegral x / maxChurn) 0 0.0) <$> churn )
+      ( (\x -> Metric 0 (fromIntegral x / maxComplexity) 0.0) <$> complexity )
 
 pmdHotspots :: String -> String -> Maybe String -> Maybe String -> Maybe String -> IO ()
 pmdHotspots gitDir pmdRules before after path = do
