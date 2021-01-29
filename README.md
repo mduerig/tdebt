@@ -21,8 +21,9 @@ Churn is measured by number of version controls revisions.
   * make sure a symlink `pmd` to `pmd-bin-6.30.0/bin/run.sh` is on the `$PATH`. E.g. `ln -s /opt/pmd-bin-6.30.0/bin/run.sh /usr/local/bin/pmd`.
 
 ### Usage
-        Usage: tdebt-exe [<path>] [--pmd | --loc] [-b|--before <date>]
-                        [-a|--after <date>] [-g|--git-dir <path>]
+        Usage: tdebt [<path>] [--pmd | --loc] [-b|--before <date>] [-a|--after <date>]
+                    [-g|--git-dir <path>] [--churn-norm <churn norm>]
+                    [--complexity-norm <complexity norm>]
 
         Available options:
           -h,--help                Show this help text
@@ -32,7 +33,10 @@ Churn is measured by number of version controls revisions.
           -b,--before <date>       only include commits before the specified date
           -a,--after <date>        only include commits after the specified date
           -g,--git-dir <path>      path to the Git repository
-#### Example
+          --churn-norm <churn norm>
+                                  constant for normalizing the churn value
+          --complexity-norm <complexity norm>
+                                  constant for normalizing the complexity value#### Example
 Running the command
 
     $ tdebt pmd ~/Checkouts/jackrabbit-oak

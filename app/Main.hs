@@ -5,6 +5,8 @@ import Options.Applicative
     ( Alternative((<|>)),
       optional,
       value,
+      auto,
+      option,
       flag,
       help,
       info,
@@ -28,6 +30,8 @@ data Opts = Opts
   , after :: Maybe String
   , pmdRules :: String
   , gitDir :: String
+  , normChurn :: Maybe Double
+  , normComplexity :: Maybe Double
   } deriving Show
 
 data Complexity = PMD | LOC
@@ -43,8 +47,10 @@ main = do
     parserWithDefaultDir cd ruleFile = info (helper <*> argsParser cd ruleFile) mempty
 
 runWithOpts :: Opts -> IO ()
-runWithOpts (Opts path PMD before after pmdRules gitDir) = TechDebt.pmdHotspots gitDir pmdRules before after path
-runWithOpts (Opts path LOC before after _ gitDir) = TechDebt.locHotspots gitDir before after path
+runWithOpts (Opts path PMD before after pmdRules gitDir normChurn normComplexity) 
+  = TechDebt.pmdHotspots normChurn normComplexity  gitDir pmdRules before after path
+runWithOpts (Opts path LOC before after _ gitDir normChurn normComplexity) 
+  = TechDebt.locHotspots normChurn normComplexity gitDir before after path
 
 argsParser :: String -> String -> Parser Opts
 argsParser dir pmdRules = Opts
@@ -78,3 +84,12 @@ argsParser dir pmdRules = Opts
          <> short 'g'
          <> value dir
          <> help "path to the Git repository")
+     <*> optional ( option auto 
+          ( metavar "<churn norm>"
+         <> long "churn-norm"
+         <> help "constant for normalizing the churn value"))
+     <*> optional ( option auto
+          ( metavar "<complexity norm>"
+         <> long "complexity-norm"
+         <> help "constant for normalizing the complexity value"))
+    
