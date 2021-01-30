@@ -22,8 +22,10 @@ Churn is measured by number of version controls revisions.
 
 ### Usage
         Usage: tdebt [<path>] [--pmd | --loc] [-b|--before <date>] [-a|--after <date>]
-                    [-g|--git-dir <path>] [--churn-norm <churn norm>]
-                    [--complexity-norm <complexity norm>]
+                    [-g|--git-dir <path>]
+                    [[--churn-norm <churn norm>]
+                      [--complexity-norm <complexity norm>] |
+                      --abs]
 
         Available options:
           -h,--help                Show this help text
@@ -36,10 +38,12 @@ Churn is measured by number of version controls revisions.
           --churn-norm <churn norm>
                                   constant for normalizing the churn value
           --complexity-norm <complexity norm>
-                                  constant for normalizing the complexity value#### Example
+                                  constant for normalizing the complexity value
+          --abs                   shortcut for --churn-norm 1 --complexity-norm 1
+
 Running the command
 
-    $ tdebt pmd ~/Checkouts/jackrabbit-oak
+    $ tdebt --git-dir ~/Checkouts/jackrabbit-oak
 
 results in the following output (last 10 lines only):
 

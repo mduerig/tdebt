@@ -8,6 +8,7 @@ import Options.Applicative
       auto,
       option,
       flag,
+      flag',
       help,
       info,
       long,
@@ -30,11 +31,15 @@ data Opts = Opts
   , after :: Maybe String
   , pmdRules :: String
   , gitDir :: String
-  , normChurn :: Maybe Double
-  , normComplexity :: Maybe Double
+  , norm :: Norm
   } deriving Show
 
 data Complexity = PMD | LOC
+  deriving Show
+
+data Norm
+  = Relative { churnNorm :: Maybe Double, complexityNorm :: Maybe Double }
+  | Absolute
   deriving Show
 
 main :: IO ()
@@ -47,10 +52,14 @@ main = do
     parserWithDefaultDir cd ruleFile = info (helper <*> optsParser cd ruleFile) mempty
 
 runWithOpts :: Opts -> IO ()
-runWithOpts (Opts path PMD before after pmdRules gitDir normChurn normComplexity)
+runWithOpts (Opts path PMD before after pmdRules gitDir (Relative normChurn normComplexity))
   = TechDebt.pmdHotspots normChurn normComplexity gitDir pmdRules before after path
-runWithOpts (Opts path LOC before after _ gitDir normChurn normComplexity)
+runWithOpts (Opts path PMD before after pmdRules gitDir Absolute)
+  = TechDebt.pmdHotspots (Just 1) (Just 1) gitDir pmdRules before after path
+runWithOpts (Opts path LOC before after _ gitDir (Relative normChurn normComplexity))
   = TechDebt.locHotspots normChurn normComplexity gitDir before after path
+runWithOpts (Opts path LOC before after _ gitDir Absolute)
+  = TechDebt.locHotspots (Just 1) (Just 1) gitDir before after path
 
 optsParser :: String -> String -> Parser Opts
 optsParser dir pmdRules = Opts
@@ -60,8 +69,7 @@ optsParser dir pmdRules = Opts
      <*> optional after
      <*> rule
      <*> gitDir
-     <*> optional churnNorm
-     <*> optional complexityNorm
+     <*> ( relativeNorm <|> absoluteNorm )
   where
     path = strArgument
         (  metavar "<path>"
@@ -102,6 +110,12 @@ optsParser dir pmdRules = Opts
         <> value dir
         <> help "path to the Git repository"
         )
+
+relativeNorm :: Parser Norm
+relativeNorm = Relative
+     <$> optional churnNorm
+     <*> optional complexityNorm
+  where
     churnNorm = option auto
         (  metavar "<churn norm>"
         <> long "churn-norm"
@@ -111,4 +125,10 @@ optsParser dir pmdRules = Opts
         (  metavar "<complexity norm>"
         <> long "complexity-norm"
         <> help "constant for normalizing the complexity value"
+        )
+
+absoluteNorm :: Parser Norm
+absoluteNorm = flag' Absolute
+        (  long "abs"
+        <> help "shortcut for --churn-norm 1 --complexity-norm 1"
         )
