@@ -25,7 +25,7 @@ Churn is measured by number of version controls revisions.
                     [-g|--git-dir <path>]
                     [[--churn-norm <churn norm>]
                       [--complexity-norm <complexity norm>] |
-                      --abs]
+                      --abs] [-s|--sum <count>]
 
         Available options:
           -h,--help                Show this help text
@@ -39,7 +39,8 @@ Churn is measured by number of version controls revisions.
                                   constant for normalizing the churn value
           --complexity-norm <complexity norm>
                                   constant for normalizing the complexity value
-          --abs                   shortcut for --churn-norm 1 --complexity-norm 1
+          --abs                    shortcut for --churn-norm 1 --complexity-norm 1
+          -s,--sum <count>         output the sum of the last <count> metrics
 
 Running the command
 

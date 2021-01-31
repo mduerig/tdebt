@@ -32,6 +32,7 @@ data Opts = Opts
   , pmdRules :: String
   , gitDir :: String
   , norm :: Norm
+  , sum :: Maybe Int
   } deriving Show
 
 data Complexity = PMD | LOC
@@ -52,14 +53,14 @@ main = do
     parserWithDefaultDir cd ruleFile = info (helper <*> optsParser cd ruleFile) mempty
 
 runWithOpts :: Opts -> IO ()
-runWithOpts (Opts path PMD before after pmdRules gitDir (Relative normChurn normComplexity))
-  = TechDebt.pmdHotspots normChurn normComplexity gitDir pmdRules before after path
-runWithOpts (Opts path PMD before after pmdRules gitDir Absolute)
-  = TechDebt.pmdHotspots (Just 1) (Just 1) gitDir pmdRules before after path
-runWithOpts (Opts path LOC before after _ gitDir (Relative normChurn normComplexity))
-  = TechDebt.locHotspots normChurn normComplexity gitDir before after path
-runWithOpts (Opts path LOC before after _ gitDir Absolute)
-  = TechDebt.locHotspots (Just 1) (Just 1) gitDir before after path
+runWithOpts (Opts path PMD before after pmdRules gitDir (Relative normChurn normComplexity) sum)
+  = TechDebt.pmdHotspots normChurn normComplexity gitDir pmdRules before after sum path
+runWithOpts (Opts path PMD before after pmdRules gitDir Absolute sum)
+  = TechDebt.pmdHotspots (Just 1) (Just 1) gitDir pmdRules before after sum path
+runWithOpts (Opts path LOC before after _ gitDir (Relative normChurn normComplexity) sum)
+  = TechDebt.locHotspots normChurn normComplexity gitDir before after sum path
+runWithOpts (Opts path LOC before after _ gitDir Absolute sum)
+  = TechDebt.locHotspots (Just 1) (Just 1) gitDir before after sum path
 
 optsParser :: String -> String -> Parser Opts
 optsParser dir pmdRules = Opts
@@ -70,6 +71,7 @@ optsParser dir pmdRules = Opts
      <*> rule
      <*> gitDir
      <*> ( relativeNorm <|> absoluteNorm )
+     <*> optional summary
   where
     path = strArgument
         (  metavar "<path>"
@@ -109,6 +111,12 @@ optsParser dir pmdRules = Opts
         <> short 'g'
         <> value dir
         <> help "path to the Git repository"
+        )
+    summary = option auto
+        (  metavar "<count>"
+        <> long "sum"
+        <> short 's'
+        <> help "output the sum of the last <count> metrics"
         )
 
 relativeNorm :: Parser Norm

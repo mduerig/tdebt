@@ -94,8 +94,14 @@ data Metric = Metric
   }
   deriving Show
 
+instance Semigroup Metric where
+  (<>) (Metric x1 y1 z1) (Metric x2 y2 z2) = Metric (x1 + x2) (y1 + y2) (z1 + z2)
+
+instance Monoid Metric where
+  mempty = Metric 0 0 0
+
 techDebt :: Maybe Double -> Maybe Double -> Map String Int -> Map String Int -> [(String, Metric)]
-techDebt normChurn normComplexity  churn complexity =
+techDebt normChurn normComplexity churn complexity =
   let
     maxChurn      = fromIntegral $ maximum $ elems churn
     maxComplexity = fromIntegral $ maximum $ elems complexity
@@ -109,8 +115,16 @@ techDebt normChurn normComplexity  churn complexity =
       ( (\x -> Metric (fromIntegral x / fromMaybe maxChurn normChurn) 0 0.0) <$> churn )
       ( (\x -> Metric 0 (fromIntegral x / fromMaybe maxComplexity normComplexity) 0.0) <$> complexity )
 
-pmdHotspots :: Maybe Double -> Maybe Double -> String -> String -> Maybe String -> Maybe String -> Maybe String -> IO ()
-pmdHotspots normChurn normComplexity gitDir pmdRules before after path = do
+sumMetric :: Int -> [Metric] -> Metric
+sumMetric count metrics =
+    mconcat $ take count $ reverse metrics
+
+maybeSum :: Maybe Int -> [(String , Metric)] -> IO ()
+maybeSum Nothing  metrics = mapM_ print metrics
+maybeSum (Just count) metrics = print $ sumMetric count (snd <$> metrics)
+
+pmdHotspots :: Maybe Double -> Maybe Double -> String -> String -> Maybe String -> Maybe String -> Maybe Int ->  Maybe String -> IO ()
+pmdHotspots normChurn normComplexity gitDir pmdRules before after count path = do
   (gitExitCode, gitOut, gitErr) <- gitLog gitDir before after path
   if gitExitCode /= ExitSuccess
     then do
@@ -123,11 +137,11 @@ pmdHotspots normChurn normComplexity gitDir pmdRules before after path = do
           putStrLn "Error while running PMD:"
           putStrLn pmdErr
         else do
-          mapM_ print
+          maybeSum count
           $ techDebt normChurn normComplexity (frequencies gitOut) (pmdComplexities gitDir pmdOut)
 
-locHotspots :: Maybe Double -> Maybe Double -> String -> Maybe String -> Maybe String -> Maybe String ->  IO ()
-locHotspots normChurn normComplexity gitDir before after path = do
+locHotspots :: Maybe Double -> Maybe Double -> String -> Maybe String -> Maybe String -> Maybe Int ->  Maybe String ->  IO ()
+locHotspots normChurn normComplexity gitDir before after count path = do
   (gitExitCode, gitOut, gitErr) <- gitLog gitDir before after path
   if gitExitCode /= ExitSuccess
     then do
@@ -135,5 +149,5 @@ locHotspots normChurn normComplexity gitDir before after path = do
       putStrLn gitErr
     else do
       (_, locOut, _) <- loc gitDir
-      mapM_ print
+      maybeSum count
         $ techDebt normChurn normComplexity (frequencies gitOut) (locComplexities gitDir locOut)
