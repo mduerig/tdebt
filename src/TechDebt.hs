@@ -17,14 +17,13 @@ ensureSlash s = if last s == '/' then s else s ++ "/"
 (++?) xs Nothing = xs
 (++?) xs (Just x) = xs ++ [x]
 
-gitLog :: String -> Maybe String -> Maybe String -> Maybe String -> IO (ExitCode, String, String)
-gitLog gitDir before after path =
+gitLog :: String -> Maybe String -> Maybe String -> IO (ExitCode, String, String)
+gitLog gitDir after path =
   let
-    beforeDate = fmap ("--before=" ++) before
     afterDate = fmap ("--after=" ++) after
     args = ["--git-dir", ensureSlash gitDir ++ ".git", "log", "--pretty=format:", "--name-only"]
   in
-    readProcessWithExitCode "git" (args ++? beforeDate ++? afterDate ++ ["--"] ++? path) ""
+    readProcessWithExitCode "git" (args ++? afterDate ++ ["--"] ++? path) ""
 
 pmd :: String -> String -> IO(ExitCode, String, String)
 pmd gitDir pmdRules = readProcessWithExitCode "pmd"
@@ -100,11 +99,9 @@ instance Semigroup Metric where
 instance Monoid Metric where
   mempty = Metric 0 0 0
 
-techDebt :: Maybe Double -> Maybe Double -> Map String Int -> Map String Int -> [(String, Metric)]
-techDebt normChurn normComplexity churn complexity =
+techDebt :: Map String Int -> Map String Int -> [(String, Metric)]
+techDebt churn complexity =
   let
-    maxChurn      = fromIntegral $ maximum $ elems churn
-    maxComplexity = fromIntegral $ maximum $ elems complexity
     mul (Metric churn _ _) (Metric _ complexity _) = Metric churn complexity (churn * complexity)
     nonZeroDebt (_, Metric _ _ debt) = debt /= 0
   in
@@ -112,8 +109,8 @@ techDebt normChurn normComplexity churn complexity =
     $ filter nonZeroDebt
     $ toList
     $ unionWith mul
-      ( (\x -> Metric (fromIntegral x / fromMaybe maxChurn normChurn) 0 0.0) <$> churn )
-      ( (\x -> Metric 0 (fromIntegral x / fromMaybe maxComplexity normComplexity) 0.0) <$> complexity )
+      ( (\x -> Metric (fromIntegral x) 0 0.0) <$> churn )
+      ( (\x -> Metric 0 (fromIntegral x) 0.0) <$> complexity )
 
 sumMetric :: Int -> [Metric] -> Metric
 sumMetric count metrics =
@@ -123,9 +120,9 @@ maybeSum :: Maybe Int -> [(String , Metric)] -> IO ()
 maybeSum Nothing  metrics = mapM_ print metrics
 maybeSum (Just count) metrics = print $ sumMetric count (snd <$> metrics)
 
-pmdHotspots :: Maybe Double -> Maybe Double -> String -> String -> Maybe String -> Maybe String -> Maybe Int ->  Maybe String -> IO ()
-pmdHotspots normChurn normComplexity gitDir pmdRules before after count path = do
-  (gitExitCode, gitOut, gitErr) <- gitLog gitDir before after path
+pmdHotspots :: String -> Maybe String -> String -> Maybe Int ->  Maybe String -> IO ()
+pmdHotspots gitDir after pmdRules count path = do
+  (gitExitCode, gitOut, gitErr) <- gitLog gitDir after path
   if gitExitCode /= ExitSuccess
     then do
       putStrLn "Error while running git: "
@@ -138,11 +135,11 @@ pmdHotspots normChurn normComplexity gitDir pmdRules before after count path = d
           putStrLn pmdErr
         else do
           maybeSum count
-          $ techDebt normChurn normComplexity (frequencies gitOut) (pmdComplexities gitDir pmdOut)
+          $ techDebt (frequencies gitOut) (pmdComplexities gitDir pmdOut)
 
-locHotspots :: Maybe Double -> Maybe Double -> String -> Maybe String -> Maybe String -> Maybe Int ->  Maybe String ->  IO ()
-locHotspots normChurn normComplexity gitDir before after count path = do
-  (gitExitCode, gitOut, gitErr) <- gitLog gitDir before after path
+locHotspots :: String -> Maybe String -> Maybe Int ->  Maybe String ->  IO ()
+locHotspots gitDir after count path = do
+  (gitExitCode, gitOut, gitErr) <- gitLog gitDir after path
   if gitExitCode /= ExitSuccess
     then do
       putStrLn "Error while running git: "
@@ -150,4 +147,4 @@ locHotspots normChurn normComplexity gitDir before after count path = do
     else do
       (_, locOut, _) <- loc gitDir
       maybeSum count
-        $ techDebt normChurn normComplexity (frequencies gitOut) (locComplexities gitDir locOut)
+        $ techDebt (frequencies gitOut) (locComplexities gitDir locOut)

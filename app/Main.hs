@@ -27,20 +27,13 @@ import Paths_tdebt(getDataFileName)
 data Opts = Opts
   { path ::  Maybe String
   , complexity :: Complexity
-  , before :: Maybe String
-  , after :: Maybe String
   , pmdRules :: String
   , gitDir :: String
-  , norm :: Norm
+  , after :: Maybe String
   , sum :: Maybe Int
   } deriving Show
 
 data Complexity = PMD | LOC
-  deriving Show
-
-data Norm
-  = Relative { churnNorm :: Maybe Double, complexityNorm :: Maybe Double }
-  | Absolute
   deriving Show
 
 main :: IO ()
@@ -53,24 +46,18 @@ main = do
     parserWithDefaultDir cd ruleFile = info (helper <*> optsParser cd ruleFile) mempty
 
 runWithOpts :: Opts -> IO ()
-runWithOpts (Opts path PMD before after pmdRules gitDir (Relative normChurn normComplexity) sum)
-  = TechDebt.pmdHotspots normChurn normComplexity gitDir pmdRules before after sum path
-runWithOpts (Opts path PMD before after pmdRules gitDir Absolute sum)
-  = TechDebt.pmdHotspots (Just 1) (Just 1) gitDir pmdRules before after sum path
-runWithOpts (Opts path LOC before after _ gitDir (Relative normChurn normComplexity) sum)
-  = TechDebt.locHotspots normChurn normComplexity gitDir before after sum path
-runWithOpts (Opts path LOC before after _ gitDir Absolute sum)
-  = TechDebt.locHotspots (Just 1) (Just 1) gitDir before after sum path
+runWithOpts (Opts path PMD pmdRules gitDir after sum)
+  = TechDebt.pmdHotspots gitDir after pmdRules sum path
+runWithOpts (Opts path LOC _ gitDir after sum)
+  = TechDebt.locHotspots gitDir after sum path
 
 optsParser :: String -> String -> Parser Opts
 optsParser dir pmdRules = Opts
      <$> optional path
      <*> ( pmd <|> loc )
-     <*> optional before
-     <*> optional after
      <*> rule
      <*> gitDir
-     <*> ( relativeNorm <|> absoluteNorm )
+     <*> optional after
      <*> optional summary
   where
     path = strArgument
@@ -85,12 +72,6 @@ optsParser dir pmdRules = Opts
         (  long "loc"
         <> help "use loc complexity metric"
         )
-    before = strOption
-        (  metavar "<date>"
-        <> long "before"
-        <> short 'b'
-        <> help "only include commits before the specified date"
-        )
     after = strOption
         (  metavar "<date>"
         <> long "after"
@@ -100,7 +81,6 @@ optsParser dir pmdRules = Opts
     rule = strOption
         (  metavar "<path>"
         <> long "rule"
-        <> short 'r'
         <> value pmdRules
         <> internal
         <> help "custom PMD rule.xml"
@@ -119,24 +99,3 @@ optsParser dir pmdRules = Opts
         <> help "output the sum of the last <count> metrics"
         )
 
-relativeNorm :: Parser Norm
-relativeNorm = Relative
-     <$> optional churnNorm
-     <*> optional complexityNorm
-  where
-    churnNorm = option auto
-        (  metavar "<churn norm>"
-        <> long "churn-norm"
-        <> help "constant for normalizing the churn value"
-        )
-    complexityNorm = option auto
-        (  metavar "<complexity norm>"
-        <> long "complexity-norm"
-        <> help "constant for normalizing the complexity value"
-        )
-
-absoluteNorm :: Parser Norm
-absoluteNorm = flag' Absolute
-        (  long "abs"
-        <> help "shortcut for --churn-norm 1 --complexity-norm 1"
-        )

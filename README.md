@@ -21,25 +21,16 @@ Churn is measured by number of version controls revisions.
   * make sure a symlink `pmd` to `pmd-bin-6.30.0/bin/run.sh` is on the `$PATH`. E.g. `ln -s /opt/pmd-bin-6.30.0/bin/run.sh /usr/local/bin/pmd`.
 
 ### Usage
-        Usage: tdebt [<path>] [--pmd | --loc] [-b|--before <date>] [-a|--after <date>]
-                    [-g|--git-dir <path>]
-                    [[--churn-norm <churn norm>]
-                      [--complexity-norm <complexity norm>] |
-                      --abs] [-s|--sum <count>]
+        Usage: tdebt [<path>] [--pmd | --loc] [-g|--git-dir <path>] [-a|--after <date>]
+                    [-s|--sum <count>]
 
         Available options:
           -h,--help                Show this help text
           <path>                   path within the Git repository
           --pmd                    use pmd complexity metric
           --loc                    use loc complexity metric
-          -b,--before <date>       only include commits before the specified date
-          -a,--after <date>        only include commits after the specified date
           -g,--git-dir <path>      path to the Git repository
-          --churn-norm <churn norm>
-                                  constant for normalizing the churn value
-          --complexity-norm <complexity norm>
-                                  constant for normalizing the complexity value
-          --abs                    shortcut for --churn-norm 1 --complexity-norm 1
+          -a,--after <date>        only include commits after the specified date
           -s,--sum <count>         output the sum of the last <count> metrics
 
 Running the command
