@@ -98,29 +98,35 @@ instance Semigroup Metric where
 instance Monoid Metric where
   mempty = Metric 0 0 0
 
-techDebt :: Bool -> Map String Int -> Map String Int -> [(String, Metric)]
-techDebt perFile churn complexity =
+techDebt :: Map String Int -> Map String Int -> [(String, Metric)]
+techDebt churn complexity =
   let
     mul (Metric churn _ _) (Metric _ complexity _) = Metric churn complexity (churn * complexity)
     nonZeroDebt (_, Metric _ _ debt) = debt /= 0
-    normMetric norm (file, Metric churn complexity debt) = (file, Metric churn complexity (debt / norm))
-    norm metrics = normMetric (fromIntegral $ length metrics) <$> metrics
   in
-    (if perFile then norm else id)
-    $ sortBy (compare `on` debt . snd)
+    sortBy (compare `on` debt . snd)
     $ filter nonZeroDebt
     $ toList
     $ unionWith mul
       ( (\x -> Metric (fromIntegral x) 0 0.0) <$> churn )
       ( (\x -> Metric 0 (fromIntegral x) 0.0) <$> complexity )
 
-sumMetric :: Int -> [Metric] -> Metric
-sumMetric count metrics =
-    mconcat $ take count $ reverse metrics
+maybeNorm :: Bool -> [(String, Metric)] -> [(String, Metric)]
+maybeNorm perFile metrics =
+  let
+    norm (file, Metric churn complexity debt)
+       = (file, Metric churn complexity (debt / fromIntegral (length metrics)))
+  in
+    if perFile then norm <$> metrics
+    else metrics
 
-maybeSum :: Maybe Int -> [(String , Metric)] -> IO ()
-maybeSum Nothing  metrics = mapM_ print metrics
-maybeSum (Just count) metrics = print $ sumMetric count (snd <$> metrics)
+maybeSum :: Maybe Int -> [(String, Metric)] -> IO ()
+maybeSum Nothing metrics = mapM_ print metrics
+maybeSum (Just count) metrics =
+  let
+    sumMetric count metrics = mconcat $ take count $ reverse metrics
+  in
+    print $ sumMetric count (snd <$> metrics)
 
 pmdHotspots :: String -> Bool -> Maybe String -> String -> Maybe Int ->  Maybe String -> IO ()
 pmdHotspots gitDir perFile after pmdRules count path = do
@@ -137,7 +143,8 @@ pmdHotspots gitDir perFile after pmdRules count path = do
           putStrLn pmdErr
         else do
           maybeSum count
-          $ techDebt perFile (frequencies gitOut) (pmdComplexities gitDir pmdOut)
+          $ maybeNorm perFile
+          $ techDebt (frequencies gitOut) (pmdComplexities gitDir pmdOut)
 
 locHotspots :: String -> Bool -> Maybe String -> Maybe Int ->  Maybe String ->  IO ()
 locHotspots gitDir perFile after count path = do
@@ -149,4 +156,5 @@ locHotspots gitDir perFile after count path = do
     else do
       (_, locOut, _) <- loc gitDir
       maybeSum count
-        $ techDebt perFile (frequencies gitOut) (locComplexities gitDir locOut)
+        $ maybeNorm perFile
+        $ techDebt (frequencies gitOut) (locComplexities gitDir locOut)
