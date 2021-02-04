@@ -7,7 +7,6 @@ import Data.Function ( on )
 import Data.List.Extra ( sortBy, split )
 import Data.Bifunctor ( Bifunctor(bimap) )
 import Text.Regex.Posix ( (=~) )
-import Data.Maybe
 
 ensureSlash :: String -> String
 ensureSlash [] = "/"
@@ -107,7 +106,7 @@ techDebt perFile churn complexity =
     normMetric norm (file, Metric churn complexity debt) = (file, Metric churn complexity (debt / norm))
     norm metrics = normMetric (fromIntegral $ length metrics) <$> metrics
   in
-    (if perFile then norm else id) 
+    (if perFile then norm else id)
     $ sortBy (compare `on` debt . snd)
     $ filter nonZeroDebt
     $ toList
