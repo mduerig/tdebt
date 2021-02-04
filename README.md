@@ -21,14 +21,15 @@ Churn is measured by number of version controls revisions.
   * make sure a symlink `pmd` to `pmd-bin-6.30.0/bin/run.sh` is on the `$PATH`. E.g. `ln -s /opt/pmd-bin-6.30.0/bin/run.sh /usr/local/bin/pmd`.
 
 ### Usage
-        Usage: tdebt [<path>] [--pmd | --loc] [-g|--git-dir <path>] [-a|--after <date>]
-                    [-s|--sum <count>]
+        Usage: tdebt [<path>] [--pmd | --loc] [--per-file] [-g|--git-dir <path>]
+                    [-a|--after <date>] [-s|--sum <count>]
 
         Available options:
           -h,--help                Show this help text
           <path>                   path within the Git repository
           --pmd                    use pmd complexity metric
           --loc                    use loc complexity metric
+          --per-file               Normalize the debt value by the total number of files
           -g,--git-dir <path>      path to the Git repository
           -a,--after <date>        only include commits after the specified date
           -s,--sum <count>         output the sum of the last <count> metrics

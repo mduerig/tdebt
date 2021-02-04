@@ -99,13 +99,16 @@ instance Semigroup Metric where
 instance Monoid Metric where
   mempty = Metric 0 0 0
 
-techDebt :: Map String Int -> Map String Int -> [(String, Metric)]
-techDebt churn complexity =
+techDebt :: Bool -> Map String Int -> Map String Int -> [(String, Metric)]
+techDebt perFile churn complexity =
   let
     mul (Metric churn _ _) (Metric _ complexity _) = Metric churn complexity (churn * complexity)
     nonZeroDebt (_, Metric _ _ debt) = debt /= 0
+    normMetric norm (file, Metric churn complexity debt) = (file, Metric churn complexity (debt / norm))
+    norm metrics = normMetric (fromIntegral $ length metrics) <$> metrics
   in
-    sortBy (compare `on` debt . snd)
+    (if perFile then norm else id) 
+    $ sortBy (compare `on` debt . snd)
     $ filter nonZeroDebt
     $ toList
     $ unionWith mul
@@ -120,8 +123,8 @@ maybeSum :: Maybe Int -> [(String , Metric)] -> IO ()
 maybeSum Nothing  metrics = mapM_ print metrics
 maybeSum (Just count) metrics = print $ sumMetric count (snd <$> metrics)
 
-pmdHotspots :: String -> Maybe String -> String -> Maybe Int ->  Maybe String -> IO ()
-pmdHotspots gitDir after pmdRules count path = do
+pmdHotspots :: String -> Bool -> Maybe String -> String -> Maybe Int ->  Maybe String -> IO ()
+pmdHotspots gitDir perFile after pmdRules count path = do
   (gitExitCode, gitOut, gitErr) <- gitLog gitDir after path
   if gitExitCode /= ExitSuccess
     then do
@@ -135,10 +138,10 @@ pmdHotspots gitDir after pmdRules count path = do
           putStrLn pmdErr
         else do
           maybeSum count
-          $ techDebt (frequencies gitOut) (pmdComplexities gitDir pmdOut)
+          $ techDebt perFile (frequencies gitOut) (pmdComplexities gitDir pmdOut)
 
-locHotspots :: String -> Maybe String -> Maybe Int ->  Maybe String ->  IO ()
-locHotspots gitDir after count path = do
+locHotspots :: String -> Bool -> Maybe String -> Maybe Int ->  Maybe String ->  IO ()
+locHotspots gitDir perFile after count path = do
   (gitExitCode, gitOut, gitErr) <- gitLog gitDir after path
   if gitExitCode /= ExitSuccess
     then do
@@ -147,4 +150,4 @@ locHotspots gitDir after count path = do
     else do
       (_, locOut, _) <- loc gitDir
       maybeSum count
-        $ techDebt (frequencies gitOut) (locComplexities gitDir locOut)
+        $ techDebt perFile (frequencies gitOut) (locComplexities gitDir locOut)

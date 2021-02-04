@@ -27,6 +27,7 @@ import Paths_tdebt(getDataFileName)
 data Opts = Opts
   { path ::  Maybe String
   , complexity :: Complexity
+  , perFile :: Bool
   , pmdRules :: String
   , gitDir :: String
   , after :: Maybe String
@@ -46,15 +47,16 @@ main = do
     parserWithDefaultDir cd ruleFile = info (helper <*> optsParser cd ruleFile) mempty
 
 runWithOpts :: Opts -> IO ()
-runWithOpts (Opts path PMD pmdRules gitDir after sum)
-  = TechDebt.pmdHotspots gitDir after pmdRules sum path
-runWithOpts (Opts path LOC _ gitDir after sum)
-  = TechDebt.locHotspots gitDir after sum path
+runWithOpts (Opts path PMD perFile pmdRules gitDir after sum)
+  = TechDebt.pmdHotspots gitDir perFile after pmdRules sum path
+runWithOpts (Opts path LOC perFile _ gitDir after sum)
+  = TechDebt.locHotspots gitDir perFile after sum path
 
 optsParser :: String -> String -> Parser Opts
 optsParser dir pmdRules = Opts
      <$> optional path
      <*> ( pmd <|> loc )
+     <*> perFile
      <*> rule
      <*> gitDir
      <*> optional after
@@ -71,6 +73,10 @@ optsParser dir pmdRules = Opts
     loc = flag PMD LOC
         (  long "loc"
         <> help "use loc complexity metric"
+        )
+    perFile = flag False True
+        (  long "per-file"
+        <> help "Normalize the debt value by the total number of files"
         )
     after = strOption
         (  metavar "<date>"
