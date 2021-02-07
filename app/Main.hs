@@ -47,10 +47,16 @@ main = do
     parserWithDefaultDir cd ruleFile = info (helper <*> optsParser cd ruleFile) mempty
 
 runWithOpts :: Opts -> IO ()
-runWithOpts (Opts path PMD perFile pmdRules gitDir after sum)
-  = TechDebt.pmdHotspots gitDir perFile after pmdRules sum path
-runWithOpts (Opts path LOC perFile _ gitDir after sum)
-  = TechDebt.locHotspots gitDir perFile after sum path
+runWithOpts (Opts path complexity perFile pmdRules gitDir after count) = do
+  tDebt <- case complexity of
+    PMD -> TechDebt.pmdHotspots gitDir after pmdRules path
+    LOC -> TechDebt.locHotspots gitDir after path
+  case tDebt of
+    Left msg -> putStrLn msg
+    Right debt -> mapM_ print
+      $ TechDebt.maybeSum count
+      $ TechDebt.maybeNorm perFile
+        debt
 
 optsParser :: String -> String -> Parser Opts
 optsParser dir pmdRules = Opts

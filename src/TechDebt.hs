@@ -98,7 +98,9 @@ instance Semigroup Metric where
 instance Monoid Metric where
   mempty = Metric 0 0 0
 
-techDebt :: Map String Int -> Map String Int -> [(String, Metric)]
+type TDebt = [(String, Metric)]
+
+techDebt :: Map String Int -> Map String Int -> TDebt
 techDebt churn complexity =
   let
     mul (Metric churn _ _) (Metric _ complexity _) = Metric churn complexity (churn * complexity)
@@ -111,7 +113,7 @@ techDebt churn complexity =
       ( (\x -> Metric (fromIntegral x) 0 0.0) <$> churn )
       ( (\x -> Metric 0 (fromIntegral x) 0.0) <$> complexity )
 
-maybeNorm :: Bool -> [(String, Metric)] -> [(String, Metric)]
+maybeNorm :: Bool -> TDebt -> TDebt
 maybeNorm perFile metrics =
   let
     norm (file, Metric churn complexity debt)
@@ -120,41 +122,40 @@ maybeNorm perFile metrics =
     if perFile then norm <$> metrics
     else metrics
 
-maybeSum :: Maybe Int -> [(String, Metric)] -> IO ()
-maybeSum Nothing metrics = mapM_ print metrics
+maybeSum :: Maybe Int -> TDebt -> TDebt
+maybeSum Nothing metrics = metrics
 maybeSum (Just count) metrics =
   let
     sumMetric count metrics = mconcat $ take count $ reverse metrics
   in
-    print $ sumMetric count (snd <$> metrics)
+    [("*", sumMetric count (snd <$> metrics))]
 
-pmdHotspots :: String -> Bool -> Maybe String -> String -> Maybe Int ->  Maybe String -> IO ()
-pmdHotspots gitDir perFile after pmdRules count path = do
+pmdHotspots :: String -> Maybe String -> String ->  Maybe String -> IO (Either String TDebt)
+pmdHotspots gitDir after pmdRules path = do
   (gitExitCode, gitOut, gitErr) <- gitLog gitDir after path
   if gitExitCode /= ExitSuccess
-    then do
-      putStrLn "Error while running git: "
-      putStrLn gitErr
+    then return
+      $ Left
+      $ "Error while running git: " ++ gitErr
     else do
       (pmdExitCode, pmdOut, pmdErr) <- pmd gitDir pmdRules
       if pmdExitCode `notElem` [ExitSuccess, ExitFailure 4]
-        then do
-          putStrLn "Error while running PMD:"
-          putStrLn pmdErr
-        else do
-          maybeSum count
-          $ maybeNorm perFile
+        then return
+          $ Left
+          $ "Error while running PMD: " ++ pmdErr
+        else return
+          $ Right
           $ techDebt (frequencies gitOut) (pmdComplexities gitDir pmdOut)
 
-locHotspots :: String -> Bool -> Maybe String -> Maybe Int ->  Maybe String ->  IO ()
-locHotspots gitDir perFile after count path = do
+locHotspots :: String -> Maybe String ->  Maybe String ->  IO (Either String TDebt)
+locHotspots gitDir after path = do
   (gitExitCode, gitOut, gitErr) <- gitLog gitDir after path
   if gitExitCode /= ExitSuccess
-    then do
-      putStrLn "Error while running git: "
-      putStrLn gitErr
+    then return
+      $ Left
+      $ "Error while running git: " ++ gitErr
     else do
       (_, locOut, _) <- loc gitDir
-      maybeSum count
-        $ maybeNorm perFile
+      return
+        $ Right
         $ techDebt (frequencies gitOut) (locComplexities gitDir locOut)
