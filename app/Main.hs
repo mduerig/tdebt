@@ -23,10 +23,14 @@ import Options.Applicative
       internal,
       Parser )
 import Data.Monoid ((<>))
+import Data.Map.Strict ( Map, fromList )
 import System.Directory (getCurrentDirectory)
 import Paths_tdebt(getDataFileName)
 import qualified Data.Csv as CSV
+import qualified Data.Aeson as JSON
+import Data.Aeson ( (.=) )
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import Data.Text (pack)
 
 data Opts = Opts
   { path ::  Maybe String
@@ -42,7 +46,7 @@ data Opts = Opts
 data Complexity = PMD | LOC
   deriving Show
 
-data OutputFormat = RAW | CSV
+data OutputFormat = RAW | CSV | JSON
   deriving Show
 
 main :: IO ()
@@ -61,15 +65,30 @@ csvEncode tDebt =
   in
     CSV.encode $ tabulate <$> tDebt
 
+instance JSON.ToJSON TechDebt.Metric where
+  toJSON (TechDebt.Metric churn complexity debt) =
+    JSON.object
+      [ "churn" .= churn
+      , "complexity" .= complexity
+      , "debt" .= debt
+      ]
+
+jsonEncode :: TechDebt.TDebt -> BSL.ByteString
+jsonEncode tDebt = JSON.encode $ fromList tDebt
+
 raw :: TechDebt.TDebt -> IO ()
 raw = mapM_ print
 
 csv :: TechDebt.TDebt -> IO ()
 csv tDebt = BSL.putStr $ csvEncode tDebt
 
-toFormat :: OutputFormat -> TechDebt.TDebt -> IO ()
-toFormat RAW = raw
-toFormat CSV = csv
+json :: TechDebt.TDebt -> IO ()
+json tDebt = BSL.putStr $ jsonEncode tDebt
+
+formatOutput :: OutputFormat -> TechDebt.TDebt -> IO ()
+formatOutput RAW = raw
+formatOutput CSV = csv
+formatOutput JSON = json
 
 runWithOpts :: Opts -> IO ()
 runWithOpts (Opts path complexity perFile pmdRules gitDir after count format) = do
@@ -79,7 +98,7 @@ runWithOpts (Opts path complexity perFile pmdRules gitDir after count format) = 
   case tDebt of
     Left msg -> putStrLn msg
     Right debt ->
-        toFormat format
+        formatOutput format
       $ TechDebt.maybeSum count
       $ TechDebt.maybeNorm perFile
         debt
@@ -93,7 +112,7 @@ optsParser dir pmdRules = Opts
      <*> gitDir
      <*> optional after
      <*> optional summary
-     <*> (raw <|> csv)
+     <*> (raw <|> csv <|> json)
   where
     path = strArgument
         (  metavar "<path>"
@@ -144,5 +163,9 @@ optsParser dir pmdRules = Opts
     csv = flag RAW CSV
         (  long "csv"
         <> help "CSV output format"
+        )
+    json = flag RAW JSON
+        (  long "json"
+        <> help "JSON output format"
         )
 

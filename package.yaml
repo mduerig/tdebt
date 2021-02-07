@@ -28,6 +28,8 @@ dependencies:
 - optparse-applicative
 - cassava
 - bytestring
+- aeson
+- text
 
 library:
   source-dirs: src
