@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b70bc86eed6704ee448415e772cac79ca3c7da64ce9735278654bd6cf397950d
+-- hash: 1f43b57bb24a7823d223eab8f8f866f627e82620d00aca49154e69e2c7011674
 
 name:           tdebt
 version:        0.1.0.0
@@ -35,6 +35,8 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , bytestring
+    , cassava
     , containers
     , directory
     , extra
@@ -52,6 +54,8 @@ executable tdebt
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , bytestring
+    , cassava
     , containers
     , directory
     , extra
@@ -71,6 +75,8 @@ test-suite tdebt-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , bytestring
+    , cassava
     , containers
     , directory
     , extra

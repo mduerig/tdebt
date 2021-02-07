@@ -26,6 +26,8 @@ dependencies:
 - extra
 - regex-posix
 - optparse-applicative
+- cassava
+- bytestring
 
 library:
   source-dirs: src
