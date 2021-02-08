@@ -2,8 +2,7 @@
 
 The `tdebt` utility helps finding hotspots of technical debt in code. To do this it assigns a debt metric to every source file. The bigger the debt metric value the more technical debt has been accumulated in the affected file. The debt value is the product of the normalized complexity and the normalized churn of a file:
 
-    debt(file) = (complexity(file) / max(complexity(all files in project)))
-             * (churn(file) / max(churn(all files in project)))
+    debt(file) = complexity(file) * churn(file)
 
 See [Code as a Crime Scene](https://www.adamtornhill.com/articles/crimescene/codeascrimescene.htm) for more background.
 
