@@ -4,11 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b1df75b92f87899cc13fc7a4d9d20b9842e389a27d0f8c19adc46badb9b99e68
+-- hash: f55ee4ae0cfce03f8a6176d060b6e0522c98e5eb553453c4797b6cf38d3ce08a
 
 name:           tdebt
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/tdebt#readme>
+description:    Please see the README on GitHub at <https://github.com/mduerig/tdebt#readme>
 homepage:       https://github.com/mduerig/tdebt#readme
 bug-reports:    https://github.com/mduerig/tdebt/issues
 author:         Michael Dürig
